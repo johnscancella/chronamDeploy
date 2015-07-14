@@ -3,10 +3,10 @@
   vars:
     CHRONAM_HOME: "/opt/chronam"
     SOLR_VERSION: 4.10.4
-    SOLR_HOME: "/opt/solr/{{SOLR_VERSION}}"
+    SOLR_HOME: "/opt/solr"
   tasks:
   - name: create {{SOLR_HOME}}
-    file: path={{SOLR_HOME}} mode=0775 state=directory
+    file: path={{SOLR_HOME}} mode=0775 state=directory owner={{ansible_ssh_user}} group={{ansible_ssh_user}}
     become: yes
 
   - name: download solr {{SOLR_VERSION}}
@@ -30,14 +30,14 @@
   - name: Copy chronam config files
     copy: dest={{item.dest}} src={{item.src}} 
     with_items:
-      - { src: 'conf/jetty7.sh', dest: '/etc/init.d/jetty' }
+      - { src: 'conf/jetty7.sh', dest: '/etc/init.d/jetty.service' }
       - { src: 'conf/schema.xml', dest: "{{SOLR_HOME}}/solr/collection1/conf/schema.xml" }
       - { src: 'conf/solrconfig.xml', dest: "{{SOLR_HOME}}/solr/collection1/conf/solrconfig.xml" }
       - { src: 'conf/jetty-ubuntu', dest: '/etc/default/jetty' }
     become: yes
 
   - name: Make jetty script executable
-    file: path=/etc/init.d/jetty mode=0775
+    file: path=/etc/init.d/jetty.service mode=0775
     become: yes
 
   - name: start solr
