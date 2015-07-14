@@ -1,0 +1,50 @@
+---
+- hosts: chronam-servers
+  vars:
+    CHRONAM_HOME: "/opt/chronam"
+    mysql_pass: "chronam"
+  tasks:
+  - name: add universe deb package repository
+    apt_repository: repo='deb http://archive.canonical.com/ubuntu vivid universe' state=present
+    become: yes
+
+  - name: install dependencies
+    apt: name={{ item }} state=latest
+    become: yes 
+    with_items:
+      - python-dev
+      - python-virtualenv
+      - mysql-server
+      - libmysqlclient-dev
+      - apache2
+      - libapache2-mod-wsgi
+      - solr-jetty
+      - openjdk-6-jdk
+      - libxml2-dev
+      - libxslt-dev
+      - libjpeg-dev
+      - git-core
+      - graphicsmagick
+  
+  - name: add keep auth sock to sudoers file
+    lineinfile: dest=/etc/sudoers regexp='^Defaults env_keep\+\=SSH_AUTH_SOCK' line='Defaults env_keep+=SSH_AUTH_SOCK' validate='visudo -cf %s' 
+    become: yes 
+
+  - name: set attributes of {{ CHRONAM_HOME }}
+    file: path={{ CHRONAM_HOME }} state=directory owner=ubuntu group=ubuntu mode=0775
+    become: yes
+
+  - name: Clone Chronam
+    git: repo="git@github.com:LibraryOfCongress/chronam.git" dest={{ CHRONAM_HOME }}
+
+  - name: copy database config
+    synchronize: mode=pull src=conf/utf8.cnf dest=/etc/utf8.cnf
+    become: yes
+
+  - name: start mysql service
+    service: name=mysql state=restarted
+    become: yes
+
+  - name: create chronam user
+    mysql_user: name=chronam password={{ mysql_pass }} state=present priv=chronam.*:ALL,GRANT/chronam_test.*:ALL,GRANT
+
