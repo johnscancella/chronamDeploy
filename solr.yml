@@ -23,6 +23,10 @@
       - { src: 'conf/solrconfig.xml', dest: "{{SOLR_HOME}}/solr/collection1/conf/solrconfig.xml" }
     become: yes
 
+  - name: enable jetty to start
+    lineinfile: dest=/etc/default/jetty8 line=NO_START=0 regexp='.*NO_START.*=.*1.*'
+    become: yes
+
   - name: start solr
-    service: name=jetty8 state=started
+    service: name=jetty8 state=restarted
     become: yes
