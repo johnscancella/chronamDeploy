@@ -27,6 +27,10 @@
     lineinfile: dest=/etc/default/jetty8 line=NO_START=0 regexp='.*NO_START.*=.*1.*'
     become: yes
 
-  - name: start solr
+  - name: change /usr/share/jetty8 to be owned by jetty
+    file: path=/usr/share/jetty8 recurse=yes owner=jetty
+    become: yes
+
+  - name: (re)start solr
     service: name=jetty8 state=restarted
     become: yes
